@@ -1,0 +1,30 @@
+.TH STDIN2SWIFT 1 "August 11, 2015"
+.SH NAME
+stdin2swift \- Read the standard input and send it as a file on a OpenStack swift server.
+.SH SYNOPSIS
+.B stdin2swift
+.RI [ options ] " container" " filename"
+.PP
+.SH OPTIONS
+.TP
+.B \-h, \-\-help
+Show summary of options.
+.TP
+.B \-\-version
+show program's version number and exit
+.TP
+.B \-a, \-\-authUrl
+The SWIFT auth url.
+.TP
+.B \-u, \-\-user
+The SWIFT username
+.TP
+.B \-p, \-\-pasword
+The SWIFT password
+.TP
+.B \-s, \-\-split
+ If specified this option will split output file every SIZE bytes. The filename will be change to name,
+name.part00, name.part01, name.part02 .... (ex: 10B, 42K, 12M, 13.4G)
+.SH AUTHOR
+.br
+Jérôme Quéré <jerome.quere@indigen.com>

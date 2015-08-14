@@ -1,0 +1,124 @@
+#!/usr/bin/env python
+##
+# The MIT License (MIT)
+#
+# Copyright (c) 2015 Indigen Solution.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+##
+
+import sys
+import argparse
+import swiftclient
+
+VERSION="@@VERSION@@"
+
+##
+# This stream wrapper simmulate end of stream after "split" byte have been read.
+# If "split" parameter is set to -1 it will behave like a normal stream.
+# Don't forget to call restart to restart the stream.
+##
+class StreamSplitter:
+    def __init__(self, stream, splitSize = -1):
+        self._stream = stream;
+        self._splitSize = splitSize;
+        self._readSize = 0;
+        self._eof = False;
+
+    def reset(self):
+        self._readSize = 0;
+
+    def isEOF(self):
+        return self._eof;
+
+    def read(self, size = -1):
+        if (self._splitSize == -1):
+            pass
+        elif (self._readSize == self._splitSize):
+            return "";
+        elif (size + self._readSize > self._splitSize):
+            size = self._splitSize - self._readSize;
+
+        result = self._stream.read(size);
+        length = len(result);
+        self._readSize += length;
+
+        if (length == 0):
+            self._eof = True;
+
+        return result;
+
+##
+# Convert human readable size to int (Ex 128.3M -> 128 300 000)
+##
+class SizeArgparseAction(argparse.Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        setattr(namespace, self.dest, self.human2bytes(values));
+
+    @staticmethod
+    def human2bytes(s):
+        UNITS = {'B' : 1,
+                 'K' : 1024,
+                 'M' : 1048576,
+                 'G' : 1073741824}
+        mult = 1;
+        if (s[-1:] in UNITS):
+            mult = UNITS[s[-1:]];
+            s = s[:-1];
+
+        return int(float(s) * mult)
+
+def main():
+
+    parser = argparse.ArgumentParser(description = """This program read the standard input and
+    send it as a file on a OpenStack swift server.""")
+    parser.add_argument("--version", action="version", version="Version : %s" % VERSION)
+    parser.add_argument("-a", "--authUrl", required = 1, metavar = "SWIFT_AUTHURL",
+                        help = "e.g. http://exemple.com/auth")
+    parser.add_argument("-u", "--user", required = 1, metavar = "SWIFT_USERNAME",
+                        help = "e.g. Bob")
+    parser.add_argument("-p", "--password", required = 1, metavar = "SWIFT_PASSWORD",
+                        help = "e.g. *********")
+    parser.add_argument("container", help = "The remote container name")
+    parser.add_argument("filename",  help = "The remote file name")
+
+    parser.add_argument("-s", "--split",
+                        metavar = 'SIZE',
+                        default = -1,
+                        action  = SizeArgparseAction,
+                        help    = """If specified this option will split output file every SIZE
+                        bytes. The filename will be change to name, name.part00, name.part01, name.part02 ....
+                        (ex: 10B, 42K, 12M, 13.4G)""")
+
+
+    args = parser.parse_args()
+    conn = swiftclient.Connection(
+        user    = args.user,
+        key     = args.password,
+        authurl = args.authUrl
+    )
+
+    stream = StreamSplitter(sys.stdin, args.split);
+    i = 0;
+    while (stream.isEOF() == False):
+        conn.put_object("default", "%s.part%02d" % (args.filename, i) , contents=stream)
+        stream.reset();
+        i = i + 1;
+
+main()
