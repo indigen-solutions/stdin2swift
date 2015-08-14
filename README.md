@@ -7,6 +7,12 @@ Read the standard input and send it as a file on a OpenStack swift server.
 
 ### Installation
 
+#### Debian / Ubuntu
+```
+wget 'https://github.com/indigen-solutions/stdin2swift/releases/download/v0.1/stdin2swift_0.1-1-g1c4085b_all.deb'
+sudo dpkg -i stdin2swift_0.1-1-g1c4085b_all.deb
+```
+
 #### Other linux distributions
 ```
 git clone https://github.com/indigen-solutions/stdin2swift.git
