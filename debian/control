@@ -1,0 +1,32 @@
+Source: stdin2swift
+Section: utils
+Priority: optional
+Maintainer: Jérôme Quéré <jerome.quere@indigen.com>
+Build-Depends: debhelper (>= 9)
+Standards-Version:  3.9.6
+Vcs-Git: https://github.com/indigen-solutions/stdin2swift.git
+Vcs-Browser: https://github.com/indigen-solutions/stdin2swift
+
+Package: stdin2swift
+Architecture: all
+Depends: ${misc:Depends}, python (>= 2.6), swift
+Description:Read the standard input and send it as a file on a OpenStack swift server.
+ usage: stdin2swift.py [-h] -a SWIFT_AUTHURL -u SWIFT_USERNAME -p SWIFT_PASSWORD
+ [-s SIZE] container filename
+ .
+ This program read the standard input and send it as a file on a
+ OpenStack swift server.
+ .
+ positional arguments:
+  - container             The remote container name
+  - filename              The remote file name
+ .
+ optional arguments:
+  -h, --help            show this help message and exit
+  --version             show program's version number and exit
+  -a SWIFT_AUTHURL, --authUrl SWIFT_AUTHURL e.g. http://exemple.com/auth
+  -u SWIFT_USERNAME, --user SWIFT_USERNAME e.g. Bob
+  -p SWIFT_PASSWORD, --password SWIFT_PASSWORD e.g. *********
+  -s SIZE, --split SIZE If specified this option will split output file every
+   SIZE bytes. The filename will be change to name, name.part00, name.part01,
+   name.part02 .... (ex: 10B, 42K, 12M, 13.4G)
